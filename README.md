@@ -1,5 +1,5 @@
-# msams
-This rep includes the .zip of MSAMSComponents.cpp and MSAMSComponents.h files for MSAMS project.
+# MSAMS
+This rep includes the .zip of MSAMSComponents.cpp and MSAMSComponents.h files for MSAMS project and the MSAMS.ino example file.
 The MSAMS Components library is a small and fast library for reading from and writing to analog electronic components through Arduino boards. It consists of:
 
 -MSAMSComponents.h file (prototype) that contains all the classes for digital representation of many analog components (pots, buttons, LEDs, thermal / light sensors etc)
