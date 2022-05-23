@@ -14,7 +14,7 @@ MSAMS stands for Microcontroller Software Application Modular Synthesizer. Clear
 4. Open Aduino IDE
 5. Go to the menu bard on the top and select Sketch => Include Library => MSAMSComponents
 6. In the global scope, create an instance for each corresponding analog component you use on your hardware ( if a pot, use Potentiometer pot(aPinNum); )
-7. In void setup() function, create an instance of the base class MSAMSComponent pointer for each instance of the analog components you created in the global scope ( like above, MSAMSComponent *ppot = &pot; )
+7. In void setup() function, create an instance pointer of the base class MSAMSComponent for each instance of the analog components you created in the global scope ( like above, MSAMSComponent *ppot = &pot; )
 8. (Continuing 7) call all the pointer instances' void cfg() method ( ppot->cfg(); )
 9. Write your desired code or open the MSAMS.ino example
 10. Upload your code to your Arduino Board
