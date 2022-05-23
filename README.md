@@ -9,7 +9,7 @@ MSAMS stands for Microcontroller Software Application Modular Synthesizer. Clear
 
 ####################### INCLUDE THE LIBRARY #######################
 1. Download the MSAMSComponents.zip folder
-2. After downloading, extract the folder into the folder that you downloaded the .zip and rename the new folder MSAMSComponents. Note: in this step, I recommend that you delete the folder name in the end of the suggested path in the window will appear when the extract button is pressed.
+2. After downloading, extract the folder into the folder that you downloaded the .zip and rename the extracted one 'MSAMSComponents'. Note: in this step, I recommend that you delete the folder name in the end of the suggested path in the window will appear when the extract button is pressed.
 3. Move the extracted folder to your Documents/Arduino/libraries folder
 4. Open Aduino IDE
 5. Go to the menu bard on the top and select Sketch => Include Library => MSAMSComponents
