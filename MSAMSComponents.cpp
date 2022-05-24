@@ -15,7 +15,7 @@
 
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
- 
+
 annex
 ---------------------------------------------------------------------
 licensetoken.dict: 417 sentence-token expression.
@@ -65,6 +65,31 @@ int MSAMSComponent::getPin()
     return pin;
 }
 
+int MSAMSComponent::getState()
+{
+    if (analog)
+        state = analogRead(pin);
+    else
+        state = digitalRead(pin);
+    return state;
+}
+
+int MSAMSComponent::getPState()
+{
+    return pstate;
+}
+
+int MSAMSComponent::getD()
+{
+    int d = state - pstate;
+    return d;
+}
+
+void MSAMSComponent::updatePrev()
+{
+    pstate = state;
+}
+
 /*
 **  LEDs PROJECT  **
 *   VERSION 1.0.0
@@ -86,145 +111,107 @@ int MSAMSComponent::getPin()
 *       LED
 *       Button
 *       Potentiometer
+*       Sensor
 *       Channel
 *       Board (as an Interface)
 */
 
-// class LED : MSAMSComponent
-// {
-// public:
-//     // default
-//     LED()
-//     {
-//         pin = 0;
-//     }
-//     // custom (pin selection)
-//     LED(int _pin)
-//     {
-//         pin = _pin;
-//     }
-//     void cfg()
-//     {
-//         pinMode(pin, OUTPUT);
-//         delay(10);
-//         ON();
-//         delay(20);
-//         OFF();
-//         delay(10);
-//     }
-//     void setPin(int _pin)
-//     {
-//         if (_pin < 2)
-//             _pin = 2;
-//         else if (_pin > 12)
-//             _pin = 12;
-//         else
-//             _pin = _pin;
-//         const int p = _pin;
-//         pin = p;
-//     }
-//     int getPin()
-//     {
-//         return pin;
-//     }
-//     // ON and OFF methods are maximum optimized:
-//     //  they run only if isOn condition is the
-//     //  appropriate one
-//     void ON()
-//     {
-//         if (!isOn)
-//         {
-//             digitalWrite(pin, HIGH);
-//             isOn = true;
-//         }
-//     }
-//     void OFF()
-//     {
-//         if (isOn)
-//         {
-//             digitalWrite(pin, LOW);
-//             isOn = false;
-//         }
-//     }
-//     // publicly dynamic iOn check
-//     bool isON()
-//     {
-//         return isOn;
-//     }
-//     // timed duration for aLED ON method
-//     //  (in ms). After that it's OFF
-//     void blink_ON(int ms)
-//     {
-//         ON();
-//         delay(ms);
-//         OFF();
-//     }
-//     // enable & didable methods control the
-//     // periodic repeatedly blinking state
-//     void enableLoop()
-//     {
-//         if (!looping)
-//         {
-//             looping = true;
-//         }
-//     }
-//     void disableLoop()
-//     {
-//         if (looping)
-//         {
-//             looping = false;
-//         }
-//     }
-//     bool isLooping()
-//     {
-//         return looping;
-//     }
-//     // t_oscillate method, provides a 100% PWM
-//     // control of blink_ON method. ON-state period
-//     //(t1 arg) and OFF-state period (t2 arg) give
-//     // the total period (T) of the blink pulse in ms,
-//     // with PWM ratio the ratio between the two time values.
-//     void t_oscillate(int t1 = 10, int t2 = 10)
-//     {
-//         if (looping)
-//         {
-//             blink_ON(t1);
-//             delay(t2);
-//         }
-//     }
-//     // f_oscillate, calculates dynamicaly the two time values
-//     // of t_oscillate method, through the f (frequency) arg and pw arg
-//     // value unit based percentage (always between 0.01 and 0.99 of 1.00)
-//     // and then passes them to the invoked t_oscillate method.
-//     void f_oscillate(int f = 50, float pw = 0.5)
-//     {
-//         float T, t1, t2;
-//         int it1, it2;
-//         if (pw > 0.99)
-//         {
-//             pw = 0.99;
-//         }
-//         else if (pw < 0.01)
-//         {
-//             pw = 0.01;
-//         }
-//         T = 1000.00 / f; // T in ms
-//         t1 = T * pw;
-//         t2 = T * (1.00 - pw);
-//         it1 = (int)t1;
-//         it2 = (int)t2;
-//         it1 /= 2;
-//         it2 /= 2;
-//         t_oscillate(it1, it2);
-//     }
-//     void ostinato(int n_times = 10, int min_time = 100)
-//     {
-//         for (int i = 0; i < n_times; i += min_time)
-//         {
-//             t_oscillate(min_time + i, min_time + i);
-//         }
-//     }
-// };
+LED::LED(int _pin) : MSAMSComponent(_pin)
+{
+    analog = ANALOG;
+    setPin(_pin);
+}
+
+LED::~LED()
+{
+    ;
+}
+
+void LED::cfg()
+{
+    pinMode(pin, OUTPUT);
+    configured = true;
+    Serial.println(configured);
+    delay(20);
+}
+
+bool LED::isON()
+{
+    return isOn;
+}
+
+void LED::ON()
+{
+    if (!isOn)
+        digitalWrite(pin, 1);
+}
+
+void LED::OFF()
+{
+    if (isOn)
+        digitalWrite(pin, 0);
+}
+
+bool LED::isBlinking()
+{
+    return blinking;
+}
+
+void LED::enableBlinking()
+{
+    if (!blinking)
+        blinking = true;
+}
+
+void LED::disableBlinking()
+{
+    if (blinking)
+        blinking = false;
+}
+
+void LED::blink(int t = 1000)
+{
+    ON();
+    delay(t);
+    OFF();
+}
+
+// t_oscillate method, provides a 100% PWM
+// control of blink_ON method. ON-state period
+//(t1 arg) and OFF-state period (t2 arg) give
+// the total period (T) of the blink pulse in ms,
+// with PWM ratio the ratio between the two time values.
+void LED::t_oscillate(int t1 = 500, int t2 = 500)
+{
+    blink(t1);
+    delay(t2);
+}
+
+// f_oscillate, calculates dynamicaly the two time values
+// of t_oscillate method, through the f (frequency) and pw (pulse width) args
+// value unit based percentage (always between 0.01 and 0.99 of 1.00)
+// and then passes them to the invoked t_oscillate method.
+void LED::f_oscillate(int f = 1, float pw = 0.5)
+{
+    float T, t1, t2;
+    int it1, it2;
+    if (pw > 0.99)
+    {
+        pw = 0.99;
+    }
+    else if (pw < 0.01)
+    {
+        pw = 0.01;
+    }
+    T = 1000.00 / f; // T in ms
+    t1 = T * pw;
+    t2 = T * (1.00 - pw);
+    it1 = (int)t1;
+    it2 = (int)t2;
+    it1 /= 2;
+    it2 /= 2;
+    t_oscillate(it1, it2);
+}
 
 // BUTTON
 Button::Button(int _pin) : MSAMSComponent(_pin)
@@ -246,28 +233,6 @@ void Button::cfg()
     delay(20);
 }
 
-int Button::getState()
-{
-    state = digitalRead(pin);
-    return state;
-}
-
-int Button::getPState()
-{
-    return pstate;
-}
-
-void Button::updatePrev()
-{
-    pstate = state;
-}
-
-int Button::getD()
-{
-    int d = state - pstate;
-    return d;
-}
-
 // POTENTIOMETER
 Potentiometer::Potentiometer(int _pin) : MSAMSComponent(_pin)
 {
@@ -287,28 +252,6 @@ void Potentiometer::cfg()
     delay(20);
 }
 
-int Potentiometer::getState()
-{
-    state = analogRead(pin);
-    return state;
-}
-
-int Potentiometer::getPState()
-{
-    return pstate;
-}
-
-void Potentiometer::updatePrev()
-{
-    pstate = state;
-}
-
-int Potentiometer::getD()
-{
-    int d = state - pstate;
-    return d;
-}
-
 int Potentiometer::divide(int steps)
 {
     int s, d, result;
@@ -316,6 +259,89 @@ int Potentiometer::divide(int steps)
     d = 1023 / steps;
     result = s / d;
     return result;
+}
+
+// SENSOR
+Sensor::Sensor(int _pin) : MSAMSComponent(_pin)
+{
+    analog = ANALOG;
+    setPin(_pin);
+}
+
+Sensor::~Sensor()
+{
+    ;
+}
+
+void Sensor::calibrate()
+{
+    if (configured)
+    {
+        int inMin, inMax, time;
+        while (time < 5000)
+        {
+            int s = getState();
+            if (s >= 8 && s < 1023)
+                inMax = map(s, 0, s, 0, 1023);
+            else if (s < 8)
+                inMin = map(s, 0, s, 0, 8);
+            time++;
+        }
+        min = inMin;
+        max = inMax / 2;
+    }
+    delay(20);
+}
+
+void Sensor::cfg()
+{
+    pinMode(pin, INPUT);
+    calibrate();
+    configured = true;
+    Serial.println(configured);
+    delay(20);
+}
+
+// PHOTISTOR
+Photistor::Photistor(int _pin) : Sensor(_pin)
+{
+    analog = ANALOG;
+    setPin(_pin);
+}
+
+Photistor::~Photistor()
+{
+    ;
+}
+
+void Photistor::cfg()
+{
+    pinMode(pin, INPUT);
+    calibrate();
+    configured = true;
+    Serial.println(configured);
+    delay(20);
+}
+
+// THERMISTOR
+Thermistor::Thermistor(int _pin) : Sensor(_pin)
+{
+    analog = ANALOG;
+    setPin(_pin);
+}
+
+Thermistor::~Thermistor()
+{
+    ;
+}
+
+void Thermistor::cfg()
+{
+    pinMode(pin, INPUT);
+    calibrate();
+    configured = true;
+    Serial.println(configured);
+    delay(20);
 }
 
 // class Channel
