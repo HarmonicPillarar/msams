@@ -67,10 +67,14 @@ int MSAMSComponent::getPin()
 
 int MSAMSComponent::getState()
 {
-    if (analog)
+    switch (analog)
+    {
+    case ANALOG:
         state = analogRead(pin);
-    else
+        break;
+    default:
         state = digitalRead(pin);
+    }
     return state;
 }
 
@@ -88,6 +92,24 @@ int MSAMSComponent::getD()
 void MSAMSComponent::updatePrev()
 {
     pstate = state;
+}
+
+int MSAMSComponent::update()
+{
+    getState();
+    updatePrev();
+    return getD();
+}
+
+int MSAMSComponent::avg(int n = 100)
+{
+    int sum;
+    for (int i = 0; i < n; i++)
+    {
+        sum += (getState() + getPState()) / 2;
+    }
+    sum /= n;
+    return sum;
 }
 
 /*
@@ -208,8 +230,6 @@ void LED::f_oscillate(int f = 1, float pw = 0.5)
     t2 = T * (1.00 - pw);
     it1 = (int)t1;
     it2 = (int)t2;
-    it1 /= 2;
-    it2 /= 2;
     t_oscillate(it1, it2);
 }
 

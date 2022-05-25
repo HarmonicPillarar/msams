@@ -23,6 +23,8 @@ public:
     int getPState();
     int getD();
     void updatePrev();
+    int update();
+    int avg(int n);
 };
 
 class LED : public MSAMSComponent
@@ -41,7 +43,7 @@ public:
     bool isBlinking();
     void enableBlinking();
     void disableBlinking();
-    void blink(int t = 1000);
+    void blink(int t);
     void t_oscillate(int t1, int t2);
     void f_oscillate(int f, float pw);
 };
@@ -62,6 +64,22 @@ public:
     void cfg() override;
     int divide(int steps);
 };
+
+// class Joystick : public Potentiometer
+// {
+//     private:
+//         int x;
+//         int y;
+//         bool pressed = false;
+//         int getX();
+//         int getY();
+
+//     public:
+//         Joystick(int _pin);
+//         ~Joystick();
+//         void cfg() override;
+//         int mag();
+// };
 
 class Sensor : public MSAMSComponent
 {
