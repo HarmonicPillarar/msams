@@ -1,25 +1,29 @@
 /*
- * License
----------------------------------------------------------------------
-    Copyright (C) 2009-2014  likooh.
+Copyright 2022 - 2023 @GranuMuse
 
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as
-    published by the Free Software Foundation; either version 2 of the
-    License, or (at your option) any later version.
+Permission is hereby granted, free of charge,
+to any person obtaining a copy of this software
+and associated documentation files (the "Software"),
+to deal in the Software without restriction,
+including without limitation the rights to use,
+copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit
+persons to whom the Software is furnished to do so,
+subject to the following conditions:
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+The above copyright notice and this permission notice
+shall be included in all copies or substantial portions
+of the Software.
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-annex
----------------------------------------------------------------------
-licensetoken.dict: 417 sentence-token expression.
-rules.dict: the rule of license.
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED
+TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR
+ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN
+ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
+OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include "Arduino.h"
@@ -50,10 +54,10 @@ void MSAMSComponent::setPin(int _pin)
     }
     else
     {
-        if (_pin < 14)
-            p = 14;
-        else if (_pin > 19)
-            p = 19;
+        if (_pin < 23)
+            p = 23;
+        else if (_pin > 28)
+            p = 28;
         else
             p = _pin;
         pin = p;
@@ -203,16 +207,19 @@ void LED::disableBlinking()
 
 void LED::blink(int t = 1000)
 {
-    ON();
-    delay(t);
-    OFF();
+    if (blinking)
+    {
+        ON();
+        delay(t);
+        OFF();
+    }
 }
 
 // t_oscillate method, provides a 100% PWM
 // control of blink_ON method. ON-state period
 //(t1 arg) and OFF-state period (t2 arg) give
 // the total period (T) of the blink pulse in ms,
-// with PWM ratio the ratio between the two time values.
+// with t1 / t2 the PWM ratio between the two time values.
 void LED::t_oscillate(int t1 = 500, int t2 = 500)
 {
     blink(t1);
@@ -221,7 +228,7 @@ void LED::t_oscillate(int t1 = 500, int t2 = 500)
 
 // f_oscillate, calculates dynamicaly the two time values
 // of t_oscillate method, through the f (frequency) and pw (pulse width) args
-// value unit based percentage (always between 0.01 and 0.99 of 1.00)
+// (pw is value unit based percentage (always between 0.01 and 0.99 of 1.00))
 // and then passes them to the invoked t_oscillate method.
 void LED::f_oscillate(int f = 1, float pw = 0.5)
 {
@@ -283,12 +290,14 @@ bool Button::clicked()
 {
     unsigned long int ms;
     unsigned long int currms;
-    bool CLICKED = false;
+    bool CLICKED;
+    CLICKED = false;
+    clicks = 0;
     while (getState())
     {
         int times;
         ms = millis();
-        while (ms <= 300)
+        while (currms <= 300)
         {
             times = 1;
             currms = millis() - ms;
@@ -304,8 +313,6 @@ bool Button::clicked()
     }
     CLICKED = (clicks == 1) ? true : false;
     update();
-    if (!state)
-        clicks = 0;
     return CLICKED;
 }
 
@@ -313,8 +320,9 @@ bool Button::doubleClicked()
 {
     unsigned long int before_1st_click_dt;
     unsigned long int after_1st_click_dt;
-    bool DBL_CLICKED = false;
+    bool DBL_CLICKED;
     before_1st_click_dt = getDt();
+    DBL_CLICKED = false;
     if (clicked())
     {
         int times;
