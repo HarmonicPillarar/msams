@@ -14,7 +14,7 @@ protected:
     bool configured;
 
 public:
-    MSAMSComponent(int x_);
+    MSAMSComponent(int _pin);
     ~MSAMSComponent();
     void setPin(int _pin);
     int getPin();
@@ -50,10 +50,19 @@ public:
 
 class Button : public MSAMSComponent
 {
+private:
+    bool toggleOn = false;
+    unsigned long int dt;
+    int clicks;
+    unsigned long int getDt();
+
 public:
     Button(int _pin);
     ~Button();
     void cfg() override;
+    bool toggle();
+    bool clicked();
+    bool doubleClicked();
 };
 
 class Potentiometer : public MSAMSComponent

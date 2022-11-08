@@ -42,7 +42,7 @@ void MSAMSComponent::setPin(int _pin)
     {
         if (_pin < 2)
             p = 2;
-        else if (_pin > 12)
+        else if (_pin > 13)
             p = 12;
         else
             p = _pin;
@@ -101,6 +101,14 @@ int MSAMSComponent::update()
     return getD();
 }
 
+void MSAMSComponent::cfg()
+{
+    pinMode(pin, INPUT);
+    this->configured = true;
+    Serial.println(configured);
+    delay(20);
+}
+
 int MSAMSComponent::avg(int n = 100)
 {
     int sum;
@@ -140,7 +148,7 @@ int MSAMSComponent::avg(int n = 100)
 
 LED::LED(int _pin) : MSAMSComponent(_pin)
 {
-    analog = ANALOG;
+    analog = false;
     setPin(_pin);
 }
 
@@ -166,12 +174,14 @@ void LED::ON()
 {
     if (!isOn)
         digitalWrite(pin, 1);
+    isOn = true;
 }
 
 void LED::OFF()
 {
     if (isOn)
         digitalWrite(pin, 0);
+    isOn = false;
 }
 
 bool LED::isBlinking()
@@ -253,6 +263,80 @@ void Button::cfg()
     delay(20);
 }
 
+bool Button::toggle()
+{
+    update();
+    if (state)
+        if (pstate != state)
+            toggleOn = !toggleOn ? true : false;
+    return toggleOn;
+}
+
+int Button::getDt()
+{
+    unsigned long int ms = millis();
+    dt = ms - dt;
+    return dt;
+}
+
+bool Button::clicked()
+{
+    unsigned long int ms;
+    unsigned long int currms;
+    bool CLICKED = false;
+    while (getState())
+    {
+        int times;
+        ms = millis();
+        while (ms <= 300)
+        {
+            times = 1;
+            currms = millis() - ms;
+            getState();
+            break;
+        }
+        if (currms > 300)
+        {
+            times = 0;
+            break;
+        }
+        clicks = times;
+    }
+    CLICKED = (clicks == 1) ? true : false;
+    update();
+    if (!state)
+        clicks = 0;
+    return CLICKED;
+}
+
+bool Button::doubleClicked()
+{
+    unsigned long int before_1st_click_dt;
+    unsigned long int after_1st_click_dt;
+    bool DBL_CLICKED = false;
+    before_1st_click_dt = getDt();
+    if (clicked())
+    {
+        int times;
+        unsigned long int clickDt;
+        after_1st_click_dt = getDt();
+        clickDt = abs(after_1st_click_dt - before_1st_click_dt);
+        if (clickDt >= 100 && clickDt <= 300)
+        {
+            times = 1;
+            if (clicks == 1)
+            {
+                clicked();
+                if (clicks == 1)
+                    times = 2;
+            }
+            clicks = times;
+        }
+    }
+    DBL_CLICKED = (clicks == 2) ? true : false;
+    return DBL_CLICKED;
+}
+
 // POTENTIOMETER
 Potentiometer::Potentiometer(int _pin) : MSAMSComponent(_pin)
 {
@@ -316,8 +400,8 @@ void Sensor::calibrate()
 void Sensor::cfg()
 {
     pinMode(pin, INPUT);
-    calibrate();
     configured = true;
+    calibrate();
     Serial.println(configured);
     delay(20);
 }
@@ -337,8 +421,8 @@ Photistor::~Photistor()
 void Photistor::cfg()
 {
     pinMode(pin, INPUT);
-    calibrate();
     configured = true;
+    calibrate();
     Serial.println(configured);
     delay(20);
 }
@@ -358,8 +442,8 @@ Thermistor::~Thermistor()
 void Thermistor::cfg()
 {
     pinMode(pin, INPUT);
-    calibrate();
     configured = true;
+    calibrate();
     Serial.println(configured);
     delay(20);
 }
