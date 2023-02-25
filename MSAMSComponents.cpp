@@ -47,15 +47,15 @@ void MSAMSComponent::setPin(int _pin)
         if (_pin < 2)
             p = 2;
         else if (_pin > 13)
-            p = 12;
+            p = 13;
         else
             p = _pin;
         pin = p;
     }
     else
     {
-        if (_pin < 23)
-            p = 23;
+        if (_pin < 13)
+            p = 13;
         else if (_pin > 28)
             p = 28;
         else
@@ -122,6 +122,15 @@ int MSAMSComponent::avg(int n = 100)
     }
     sum /= n;
     return sum;
+}
+
+void MSAMSComponent::printStatus()
+{
+    Serial.print("Previous State");
+    Serial.println(getPState());
+    Serial.print("Current State");
+    Serial.println(getState());
+    Serial.println();
 }
 
 /*
@@ -250,6 +259,79 @@ void LED::f_oscillate(int f = 1, float pw = 0.5)
     t_oscillate(it1, it2);
 }
 
+RGBLED::RGBLED(int _rpin, int _gpin, int _bpin, int _vpin) : LED(_vpin)
+{
+    analog = ANALOG;
+    RLED.setPin(_rpin);
+    GLED.setPin(_gpin);
+    BLED.setPin(_bpin);
+    setPin(_vpin);
+}
+
+RGBLED::~RGBLED()
+{
+    ;
+}
+
+void RGBLED::cfg()
+{
+    MSAMSComponent *rlp = &RLED;
+    MSAMSComponent *glp = &GLED;
+    MSAMSComponent *blp = &BLED;
+    rlp->cfg();
+    glp->cfg();
+    blp->cfg();
+    pinMode(pin, INPUT);
+    configured = true;
+    Serial.println(configured);
+    delay(20);
+}
+
+int RGBLED::getRPin()
+{
+    return RLED.getPin();
+}
+
+int RGBLED::getGPin()
+{
+    return GLED.getPin();
+}
+
+int RGBLED::getBPin()
+{
+    return BLED.getPin();
+}
+
+int RGBLED::getVPin()
+{
+    return pin;
+}
+
+void RGBLED::fade(int r, int g, int b, int v)
+{
+    int vp;
+    float rp, gp, bp;
+    rp = (r / Rmax) * v;
+    gp = (g / Gmax) * v;
+    bp = (b / Bmax) * v;
+    rp = map(rp, 0, 1, 0, 255);
+    gp = map(gp, 0, 1, 0, 255);
+    bp = map(bp, 0, 1, 0, 255);
+    analogWrite(getRPin(), rp);
+    analogWrite(getGPin(), gp);
+    analogWrite(getBPin(), bp);
+}
+
+void RGBLED::RGBON(int r, int g, int b)
+{
+    fade(r, g, b, 255);
+}
+
+void RGBLED::RGBOFF(int r, int g, int b)
+{
+    fade(r, g, b, 0);
+}
+
 // BUTTON
 Button::Button(int _pin) : MSAMSComponent(_pin)
 {
@@ -272,42 +354,46 @@ void Button::cfg()
 
 bool Button::toggle()
 {
-    update();
+    getState();
     if (state)
         if (pstate != state)
             toggleOn = !toggleOn ? true : false;
+    update();
     return toggleOn;
 }
 
-int Button::getDt()
+unsigned long Button::getDt()
 {
-    unsigned long int ms = millis();
-    dt = ms - dt;
+    ct = millis();
+    dt = ct - pt;
+    pt = ct;
     return dt;
 }
 
 bool Button::clicked()
 {
-    unsigned long int ms;
-    unsigned long int currms;
+    int loop_ms;
+    int loop_state;
     bool CLICKED;
     CLICKED = false;
     clicks = 0;
-    while (getState())
+    if (getState())
     {
         int times;
-        ms = millis();
-        while (currms <= 300)
+        for (loop_ms = 0; loop_ms <= 200; loop_ms++)
         {
-            times = 1;
-            currms = millis() - ms;
-            getState();
-            break;
-        }
-        if (currms > 300)
-        {
-            times = 0;
-            break;
+            loop_state = getState();
+            if (loop_state == 1)
+            {
+                times = 1;
+                delay(1);
+                loop_ms++;
+            }
+            else
+            {
+                times = 0;
+                break;
+            }
         }
         clicks = times;
     }
@@ -318,31 +404,34 @@ bool Button::clicked()
 
 bool Button::doubleClicked()
 {
-    unsigned long int before_1st_click_dt;
-    unsigned long int after_1st_click_dt;
+    int num_clicks_1;
+    int num_clicks_2;
+    bool isClicked;
     bool DBL_CLICKED;
-    before_1st_click_dt = getDt();
-    DBL_CLICKED = false;
-    if (clicked())
+    for (int i = 0; i < 2; i++)
     {
-        int times;
-        unsigned long int clickDt;
-        after_1st_click_dt = getDt();
-        clickDt = abs(after_1st_click_dt - before_1st_click_dt);
-        if (clickDt >= 100 && clickDt <= 300)
+        isClicked = clicked();
+        switch (i)
         {
-            times = 1;
-            if (clicks == 1)
-            {
-                clicked();
-                if (clicks == 1)
-                    times = 2;
-            }
-            clicks = times;
+        case 0:
+            if (isClicked)
+                num_clicks_1 = clicks;
+            break;
+        case 1:
+            if (isClicked)
+                num_clicks_2 = num_clicks_1 + 1;
+            break;
         }
+        delay(150);
     }
+    clicks = num_clicks_2;
     DBL_CLICKED = (clicks == 2) ? true : false;
     return DBL_CLICKED;
+}
+
+int Button::getClicks()
+{
+    return clicks;
 }
 
 // POTENTIOMETER

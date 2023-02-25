@@ -25,11 +25,12 @@ public:
     void updatePrev();
     int update();
     int avg(int n);
+    void printStatus();
 };
 
 class LED : public MSAMSComponent
 {
-private:
+protected:
     bool isOn = false;
     bool blinking = false;
 
@@ -48,21 +49,46 @@ public:
     void f_oscillate(int f, float pw);
 };
 
+class RGBLED : public LED
+{
+private:
+    int Rmax = 255;
+    int Gmax = 255;
+    int Bmax = 255;
+    LED RLED = LED(0);
+    LED GLED = LED(0);
+    LED BLED = LED(0);
+public:
+    RGBLED(int _rpin, int _gpin, int _bpin, int _vpin);
+    ~RGBLED();
+    void cfg() override;
+    int getRPin();
+    int getGPin();
+    int getBPin();
+    int getVPin();
+    void fade(int r, int g, int b, int v);
+    void RGBON(int r, int g, int b);
+    void RGBOFF(int r, int g, int b);
+};
+
 class Button : public MSAMSComponent
 {
 private:
     bool toggleOn = false;
-    unsigned long int dt;
+    unsigned long ct; //current time
+    unsigned long pt; //previous time
+    unsigned long dt; //delta time
     int clicks;
-    unsigned long int getDt();
 
 public:
     Button(int _pin);
     ~Button();
     void cfg() override;
     bool toggle();
+    unsigned long getDt();
     bool clicked();
     bool doubleClicked();
+    int getClicks();
 };
 
 class Potentiometer : public MSAMSComponent
