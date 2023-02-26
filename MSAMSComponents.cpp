@@ -50,7 +50,6 @@ void MSAMSComponent::setPin(int _pin)
             p = 13;
         else
             p = _pin;
-        pin = p;
     }
     else
     {
@@ -60,8 +59,8 @@ void MSAMSComponent::setPin(int _pin)
             p = 28;
         else
             p = _pin;
-        pin = p;
     }
+    pin = p;
 }
 
 int MSAMSComponent::getPin()
@@ -119,6 +118,7 @@ int MSAMSComponent::avg(int n = 100)
     for (int i = 0; i < n; i++)
     {
         sum += (getState() + getPState()) / 2;
+        update();
     }
     sum /= n;
     return sum;
@@ -130,6 +130,10 @@ void MSAMSComponent::printStatus()
     Serial.println(getPState());
     Serial.print("Current State");
     Serial.println(getState());
+    Serial.print("Differential State");
+    Serial.println(getD());
+    Serial.print("Average");
+    Serial.println(avg(10));
     Serial.println();
 }
 
@@ -265,6 +269,9 @@ RGBLED::RGBLED(int _rpin, int _gpin, int _bpin, int _vpin) : LED(_vpin)
     RLED.setPin(_rpin);
     GLED.setPin(_gpin);
     BLED.setPin(_bpin);
+    rpin = RLED.getPin();
+    gpin = GLED.getPin();
+    bpin = BLED.getPin();
     setPin(_vpin);
 }
 
@@ -289,17 +296,35 @@ void RGBLED::cfg()
 
 int RGBLED::getRPin()
 {
-    return RLED.getPin();
+    return rpin;
+}
+
+void RGBLED::setRPin(int _pin)
+{
+    RLED.setPin(_pin);
+    rpin = RLED.getPin();
 }
 
 int RGBLED::getGPin()
 {
-    return GLED.getPin();
+    return gpin;
+}
+
+void RGBLED::setGPin(int _pin)
+{
+    GLED.setPin(_pin);
+    gpin = GLED.getPin();
 }
 
 int RGBLED::getBPin()
 {
-    return BLED.getPin();
+    return bpin;
+}
+
+void RGBLED::setBPin(int _pin)
+{
+    BLED.setPin(_pin);
+    bpin = BLED.getPin();
 }
 
 int RGBLED::getVPin()
@@ -309,22 +334,73 @@ int RGBLED::getVPin()
 
 void RGBLED::fade(int r, int g, int b, int v)
 {
-    int vp;
-    float rp, gp, bp;
-    rp = (r / Rmax) * v;
-    gp = (g / Gmax) * v;
-    bp = (b / Bmax) * v;
-    rp = map(rp, 0, 1, 0, 255);
-    gp = map(gp, 0, 1, 0, 255);
-    bp = map(bp, 0, 1, 0, 255);
-    analogWrite(getRPin(), rp);
-    analogWrite(getGPin(), gp);
-    analogWrite(getBPin(), bp);
+    float vp, rp, gp, bp;
+    int irp, igp, ibp;
+    vp = map(v, 0, 1023, 0.00, 1.00);
+    rp = (r / Rmax) * vp;
+    gp = (g / Gmax) * vp;
+    bp = (b / Bmax) * vp;
+
+    //for accuracy purposes, before converting to integers
+    rp *= 100.00;
+    gp *= 100.00;
+    bp *= 100.00;
+
+    //int rgb coefs
+    irp = (int)rp;
+    igp = (int)gp;
+    ibp = (int)bp;
+    irp = map(irp, 0, 100, 0, 255);
+    igp = map(igp, 0, 100, 0, 255);
+    ibp = map(ibp, 0, 100, 0, 255);
+    analogWrite(rpin, irp);
+    analogWrite(gpin, igp);
+    analogWrite(bpin, ibp);
 }
 
 void RGBLED::RGBON(int r, int g, int b)
 {
     fade(r, g, b, 255);
+}
+
+void RGBLED::R(int v)
+{
+    fade(255, 0, 0, v);
+}
+
+void RGBLED::G(int v)
+{
+    fade(0, 255, 5, v);
+}
+
+void RGBLED::B(int v)
+{
+    fade(0, 0, 255, v);
+}
+
+void RGBLED::C(int v)
+{
+    fade(0, 255, 255, v);
+}
+
+void RGBLED::Y(int v)
+{
+    fade(255, 255, 0, v);
+}
+
+void RGBLED::M(int v)
+{
+    fade(255, 0, 255, v);
+}
+
+void RGBLED::W(int v)
+{
+    fade(255, 255, 255, v);
+}
+
+void RGBLED::RGBOFF()
+{
+    fade(0, 0, 0, 0);
 }
 
 void RGBLED::RGBOFF(int r, int g, int b)

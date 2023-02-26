@@ -55,19 +55,34 @@ private:
     int Rmax = 255;
     int Gmax = 255;
     int Bmax = 255;
+    int rpin;
+    int gpin;
+    int bpin;
     LED RLED = LED(0);
     LED GLED = LED(0);
     LED BLED = LED(0);
+
 public:
     RGBLED(int _rpin, int _gpin, int _bpin, int _vpin);
     ~RGBLED();
     void cfg() override;
     int getRPin();
+    void setRPin(int _pin);
     int getGPin();
+    void setGPin(int _pin);
     int getBPin();
+    void setBPin(int _pin);
     int getVPin();
     void fade(int r, int g, int b, int v);
     void RGBON(int r, int g, int b);
+    void R(int v);
+    void G(int v);
+    void B(int v);
+    void C(int v);
+    void Y(int v);
+    void M(int v);
+    void W(int v); // white
+    void RGBOFF();
     void RGBOFF(int r, int g, int b);
 };
 
@@ -75,9 +90,9 @@ class Button : public MSAMSComponent
 {
 private:
     bool toggleOn = false;
-    unsigned long ct; //current time
-    unsigned long pt; //previous time
-    unsigned long dt; //delta time
+    unsigned long ct; // current time
+    unsigned long pt; // previous time
+    unsigned long dt; // delta time
     int clicks;
 
 public:
