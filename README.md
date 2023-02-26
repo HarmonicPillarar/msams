@@ -9,8 +9,8 @@
 This rep includes the .zip of MSAMSComponents.cpp and MSAMSComponents.h files for MSAMS project and the MSAMS.ino example file.
 The MSAMS Components library is a small and fast library for reading from and writing to analog electronic components through Arduino boards. It consists of:
 
--MSAMSComponents.h file (prototype) that contains all the classes for digital representation of many analog components (pots, buttons, LEDs, thermal / light sensors etc)
--MSAMSComponents.cpp file (the init file)
+- MSAMSComponents.h file (prototype) that contains all the classes for digital representation of many analog components (pots, buttons, LEDs, thermal / light sensors etc)
+- MSAMSComponents.cpp file (the init file)
 
 MSAMS stands for Microcontroller Software Application Modular Synthesizer. Clearly, it is a whole project shaped by its hardware and software form to retrieve the data of analog components through an Arduino board and send them via USB or other client port to a PC or any available processor unit.
 
